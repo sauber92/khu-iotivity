@@ -1,0 +1,133 @@
+#******************************************************************
+#
+# Copyright 2014 Intel Mobile Communications GmbH All Rights Reserved.
+#
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
+Import('env')
+
+##
+# Mybox build script
+##
+lib_env = env.Clone()
+SConscript('#build_common/thread.scons', exports = {'thread_env' : lib_env})
+mybox = []
+
+# Add third party libraries
+SConscript('#resource/third_party_libs.scons', 'lib_env')
+mybox_env = lib_env.Clone()
+target_os = mybox_env.get('TARGET_OS')
+
+######################################################################
+# Build flags
+######################################################################
+mybox_env.AppendUnique(CPPPATH = [
+        '#/resource/csdk/security/include',
+        '#/resource/include/',
+        '#/resource/csdk/include',
+        '#/resource/csdk/stack/include',
+        '#/resource/c_common/ocrandom/include',
+        '#/resource/csdk/logger/include',
+        '#/resource/oc_logger/include',
+		'/usr/include/openssl/'
+        ])
+
+mybox_env.AppendUnique(RPATH = [mybox_env.get('BUILD_DIR')])
+mybox_env.PrependUnique(LIBS = ['coap'])
+
+mybox_env.AppendUnique(LIBS = ['octbstack'])
+mybox_env.AppendUnique(LIBS = ['oc'])
+
+mybox_env.AppendUnique(LIBS = ['crypto'])
+mybox_env.AppendUnique(LIBS = ['dl'])
+
+compiler = mybox_env.get('CXX')
+if 'g++' in compiler:
+    mybox_env.AppendUnique(CXXFLAGS = ['-std=c++0x','-march=armv6','-Wall'])
+
+
+mybox_env.PrependUnique(LIBS = ['oc_logger'])
+
+if mybox_env.get('SECURED') == '1':
+    mybox_env.AppendUnique(LIBS = ['mbedtls', 'mbedx509','mbedcrypto'])
+    
+
+
+#def make_single_file_cpp_program(program_name):
+#    return examples_env.Program(program_name, program_name + ".cpp")
+
+######################################################################
+# Source files and Targets
+######################################################################
+#example_names = [
+#    'myboxserver', 'myboxsclient' , 'LightResource'
+#    ]
+#examples = map(make_single_file_cpp_program, example_names)
+
+######################################################################
+# Source files
+######################################################################
+
+mybox += [mybox_env.Program("myboxserver", ["myboxserver.cpp","LightResource.cpp" , "RSAUtil.cpp" , "base64.cpp"])]
+#mybox += [mybox_env.Program("myboxclient", ["myboxclient.cpp"])]
+
+######################################################################
+# Others
+######################################################################
+
+"""
+simple server&client 
+"""
+mybox += [mybox_env.Program("simpleserver", ["simpleserver.cpp"])]
+mybox += [mybox_env.Program("simpleclient", ["simpleclient.cpp"])]
+
+clientjson = mybox_env.Install(mybox_env.get('BUILD_DIR') + '/resource/mybox/',
+                mybox_env.get('SRC_DIR') + '/resource/examples/' + 'oic_svr_db_client.dat')
+serverjson = mybox_env.Install(mybox_env.get('BUILD_DIR') + '/resource/mybox/',
+                mybox_env.get('SRC_DIR') + '/resource/examples/' + 'oic_svr_db_server.dat')
+
+#directpairingdat = mybox_env.Install(mybox_env.get('BUILD_DIR') + '/resource/examples/',
+#                mybox_env.get('SRC_DIR') + '/resource/examples/' + 'oic_svr_db_client_directpairing.dat')
+
+#mybox += [clientjson, serverjson]
+
+
+
+
+
+
+light_introspection_json = mybox_env.Install(mybox_env.get('BUILD_DIR') + '/resource/mybox/',
+                mybox_env.get('SRC_DIR') + '/resource/mybox/' + 'light_introspection.json')
+#mybox += [light_introspection_json]
+
+
+
+
+
+copydatsh = mybox_env.Install(mybox_env.get('BUILD_DIR') + '/resource/mybox/',
+                mybox_env.get('SRC_DIR') + '/resource/mybox/' + 'copydat.sh')
+
+test_py = mybox_env.Install(mybox_env.get('BUILD_DIR') + '/resource/mybox/',
+                mybox_env.get('SRC_DIR') + '/resource/mybox/' + 'test.py')
+
+
+
+
+Alias("mybox", mybox)
+
+mybox_env.AppendTarget('mybox')

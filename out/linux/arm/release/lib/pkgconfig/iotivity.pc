@@ -1,0 +1,26 @@
+# Package Information for pkg-config
+
+prefix=/home/pi/Downloads/iotivity2/out/linux/arm/release/
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+includedir=${prefix}/include
+svcincludedir=${includedir}/service
+
+Name: iotivity
+Description: IoTivity is an open source reference implementation of the OIC standard specifications. This includes the libs for resource c and c++ sdk apis.
+Version: 1.3.0
+URL: https://www.iotivity.org
+Requires:
+Libs: -L${libdir} -loc -loc_logger -loc_logger_core -loctbstack -lconnectivity_abstraction -locpmapi
+Cflags: -I${includedir}/resource \
+			-I${includedir}/resource/stack \
+			-I${includedir}/resource/oc_logger \
+			-I${includedir}/c_common \
+			-I${svcincludedir}/easy-setup \
+			-I${svcincludedir}/notification \
+			-I${svcincludedir}/resource-encapsulation \
+			-I${svcincludedir}/resource-container \
+			-I${svcincludedir}/resource-hosting \
+			-I${svcincludedir}/resource-directory \
+			-I${svcincludedir}/things-manager \
+			-DROUTING_EP=1 -D__WITH_DTLS__=1
